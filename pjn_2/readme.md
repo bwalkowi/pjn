@@ -50,15 +50,22 @@ GET judgments/_search
 }
 ```
 
+Wynik: 829
+
+
 ## Orzeczenia, w których występuje słowo 'trwały uszczerbek na zdrowiu'
-```GET judgments/_search
-   {
-     "size": 0,
-     "query": {
-       "match_phrase": {"content": "trwały uszczerbek na zdrowiu"}
-     }
-   }
 ```
+GET judgments/_search
+{
+  "size": 0,
+  "query": {
+    "match_phrase": {"content": "trwały uszczerbek na zdrowiu"}
+  }
+}
+```
+
+Wynik: 9
+
 
 ## Jak wyżej, ale z uwzględnieniem możliwości wystąpienia maksymalnie 2 dodatkowych słów pomiędzy dowolnymi elementami frazy
 TODO
@@ -83,3 +90,4 @@ GET judgments/_search
 }
 ```
 
+Histogram w pliku hist.png
