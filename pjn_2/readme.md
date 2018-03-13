@@ -39,6 +39,7 @@ PUT judgments
 }
 ```
 
+
 ## Orzeczenia, w których występuje słowo 'szkoda'
 ```
 GET judgments/_search
@@ -59,7 +60,9 @@ GET judgments/_search
 {
   "size": 0,
   "query": {
-    "match_phrase": {"content": "trwały uszczerbek na zdrowiu"}
+    "match_phrase": {
+      "content": "trwały uszczerbek na zdrowiu"
+    }
   }
 }
 ```
@@ -68,10 +71,56 @@ Wynik: 9
 
 
 ## Jak wyżej, ale z uwzględnieniem możliwości wystąpienia maksymalnie 2 dodatkowych słów pomiędzy dowolnymi elementami frazy
-TODO
+```
+GET judgments/_search
+{
+  "size": 0,
+  "query": {
+    "match_phrase": {
+      "content": {
+        "query": "trwały uszczerbek na zdrowiu",
+        "slop": 2
+      }
+    }
+  }
+}
+```
+
+Wynik: 10
+
 
 ## 3 sędziów, którzy wydali największą liczbę orzeczeń w danym roku, wraz z liczbą wydanych orzeczeń
-TODO
+```
+GET /judgments/_search
+{
+    "size" : 0,
+    "aggs" : { 
+        "judgments_per_judge" : { 
+            "terms" : { 
+              "field" : "judges",
+              "size" : 300
+            }
+        }
+    }
+}
+```
+
+Wyniki:
+```
+{
+  "key": "Dariusz Zawistowski",
+  "doc_count": 227
+},
+{
+  "key": "Teresa Bielska-Sobkowicz",
+  "doc_count": 223
+},
+{
+  "key": "Gerard Bieniek",
+  "doc_count": 220
+}
+```
+
 
 ## Histogram liczby orzeczeń w zależności od miesiąca
 

@@ -16,8 +16,7 @@ def load_data(files_path, url, year):
                     data = {
                         "content": judgment['textContent'],
                         "date": date,
-                        "signature": [case['caseNumber']
-                                      for case in judgment['courtCases']],
+                        "signature": judgment['id'],
                         "judges": [judge['name'] for judge in judgment['judges']]
                     }
                     ret = requests.post(url, json=data)
