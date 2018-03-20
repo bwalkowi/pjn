@@ -19,7 +19,7 @@
     'ipse': 'inne', 
     'настаняване': 'настаняване', 
     'upm': 'ups', 
-    'przep': 'przez', 
+    'xiaopinga': 'xiaopinga', 
     'czalność': 'czarność', 
     'assembly': 'assemblery', 
     'absentes': 'absentuj', 

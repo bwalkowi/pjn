@@ -1,19 +1,18 @@
 import os
 import json
+import pickle
 import argparse
 from random import sample
 from itertools import chain
 from collections import Counter
-from multiprocessing import Pool
 
 import regex as re
 import matplotlib.pyplot as plt
-from requests_html import HTML
 
 
 YEAR = '2008'
-ALL_WORDS_OUTPUT_FILE = 'all_words.json'
-RE = re.compile(r'\b\p{L}{2,}?\b', re.IGNORECASE)
+UNIGRAM_STATS_FILE = './unigram_stats.pickle'
+RE_WORD = re.compile(r'\b\p{L}{2,}?\b', re.IGNORECASE)
 
 
 def edits1(word):
@@ -51,44 +50,44 @@ def correct_words(unrecognized_words, known_words, all_words):
 
 def draw_histogram(all_words):
     _, frequencies = zip(*all_words.most_common())
-    x = list(range(len(frequencies)))
-
-    plt.loglog(x, frequencies)
+    plt.loglog(list(range(len(frequencies))), frequencies)
     plt.xlabel('Words')
     plt.ylabel('Frequency')
     plt.title(f'Frequency of all most found words')
     plt.show()
 
 
-def get_words_from_file(path):
-    words = []
-    with open(path) as file:
+def get_words_from_file(file_path):
+    with open(file_path) as file:
         judgments = json.load(file)
         for item in judgments['items']:
             if item['judgmentDate'].startswith(YEAR):
-                text = re.sub(r'(-\n|\bx+\b)', '', item['textContent'],
-                              flags=re.WORD).lower()
-                html = HTML(html=text)
-                words.extend(RE.findall(html.text))
-    return words
+                text = re.sub(r'(<[^>]*>|-\n|\bx+\b)', '',
+                              item['textContent'], flags=re.WORD).lower()
+                for match in RE_WORD.finditer(text):
+                    yield match.group()
 
 
-def get_all_words(path):
+def get_words_from_files(dir_path):
+    files = (os.path.join(dir_path, file_name)
+             for file_name in os.listdir(dir_path)
+             if file_name.startswith('judgments'))
+    for file in files:
+        yield from get_words_from_file(file)
+
+
+def get_unigram_stats(path):
     if os.path.isdir(path):
-        files = (os.path.join(path, file_name)
-                 for file_name in os.listdir(path)
-                 if file_name.startswith('judgments'))
-        with Pool(processes=os.cpu_count() or 2) as pool:
-            all_words = Counter(chain(*pool.map(get_words_from_file, files)))
-        with open(ALL_WORDS_OUTPUT_FILE, 'w') as file:
-            json.dump(all_words, file)
+        unigram_stats = Counter(get_words_from_files(path))
+        with open(UNIGRAM_STATS_FILE, 'wb') as file:
+            pickle.dump(unigram_stats, file)
     elif os.path.isfile(path):
-        with open(path) as file:
-            all_words = Counter(json.load(file))
+        with open(path, 'rb') as file:
+            unigram_stats = pickle.load(file)
     else:
-        raise RuntimeError(f'Specified path ({path}) does not point to '
-                           f'valid file or directory')
-    return all_words
+        raise RuntimeError(f'Specified path ({path}) points to neither '
+                           f'valid file nor directory')
+    return unigram_stats
 
 
 def get_known_words(path):
@@ -101,23 +100,19 @@ def main():
     parser.add_argument('-p', '--polimorfologik',
                         default='./polimorfologik-2.1.txt',
                         help='path to polimorfologik file')
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument('-d', '--dir_path',
-                       default='../data',
-                       help='path to directory containing judgments')
-    group.add_argument('-i', '--input',
-                       help='path to file containing words frequency')
+    parser.add_argument('-d', '--dir_path',
+                        help='path to directory containing judgments')
     args = parser.parse_args()
 
     known_words = get_known_words(args.polimorfologik)
-    all_words = get_all_words(args.input or args.dir_path)
-    unrecognized_words = all_words.keys() - known_words
+    unigram_stats = get_unigram_stats(args.dir_path or UNIGRAM_STATS_FILE)
+    unrecognized_words = unigram_stats.keys() - known_words
 
-    draw_histogram(all_words)
-    print(len(all_words.keys()), len(unrecognized_words))
+    draw_histogram(unigram_stats)
+    print(len(unigram_stats.keys()), len(unrecognized_words))
     # print(unrecognized_words)
 
-    correct_words(sample(unrecognized_words, 30), known_words, all_words)
+    correct_words(sample(unrecognized_words, 30), known_words, unigram_stats)
 
 
 if __name__ == '__main__':
