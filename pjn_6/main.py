@@ -14,10 +14,22 @@ import regex as re
 INPUT_DIR = './judgments/'
 RE_WORD = re.compile(r'^[\p{L}\s]+$')
 TRAIN_RATIO = 0.75
-TOP_20 = ['na', 'do', 'art', 'nie', 'że', 'przez', 'ust',
-          'się', 'dnia', 'jest', 'oraz', 'ustawy', 'od',
-          'sąd', 'nr', 'postępowania', 'pkt', 'tym', 'za',
-          'sądu']
+TOP_20 = [
+    'na', 'do', 'art', 'nie', 'że', 'przez', 'ust',
+    'się', 'dnia', 'jest', 'oraz', 'ustawy', 'od',
+    'sąd', 'nr', 'postępowania', 'pkt', 'tym', 'za',
+    'sądu'
+]
+CATEGORIES = {
+    'ac': 'Sprawy cywilne',
+    'au': 'Sprawy z zakresu ubezpieczenia społecznego',
+    'ak': 'Sprawy karne',
+    'g': 'Sprawy gospodarcze',
+    'ap': 'Sprawy w zakresie prawa pracy',
+    'r': 'Sprawy w zakresie prawa rodzinnego',
+    'w': 'Sprawy o wykroczenia',
+    'am': 'Sprawy w zakresie prawa konkurencji'
+}
 
 
 def read_document(file_path, normalized):
@@ -60,18 +72,46 @@ def classify(normalized):
     bow_training_x = vectorizer.fit_transform(training_x)
     bow_test_x = vectorizer.transform(test_x)
 
-    model = SVC(C=100, kernel='rbf', gamma=0.01)
-    model.fit(bow_training_x, training_y)
+    micro_true = []
+    micro_pred = []
+    macro_metrics = [0, 0, 0]
+    categories_num = 0
 
-    prediction = model.predict(bow_test_x)
-    micro_avg = precision_recall_fscore_support(test_y, prediction,
-                                                average='weighted')[:-1]
-    macro_avg = precision_recall_fscore_support(test_y, prediction,
-                                                average='macro')[:-1]
+    for abbrev, category in CATEGORIES.items():
+        categories_num += 1
+        bin_training_y = [0 if label == abbrev else 1 for label in training_y]
+        bin_test_y = [0 if label == abbrev else 1 for label in test_y]
 
-    print(classification_report(test_y, prediction),
-          f'\nMicro-average: {micro_avg}',
-          f'\nMacro-average: {macro_avg}')
+        model = SVC(C=100, kernel='rbf', gamma=0.01)
+        model.fit(bow_training_x, bin_training_y)
+
+        prediction = model.predict(bow_test_x)
+
+        metrics = precision_recall_fscore_support(bin_test_y, prediction,
+                                                  pos_label=0, average='binary')
+        precision, recall, f1_score, _ = metrics
+
+        micro_true.extend(bin_test_y)
+        micro_pred.extend(prediction)
+        macro_metrics[0] += precision
+        macro_metrics[1] += recall
+        macro_metrics[2] += f1_score
+
+        print(f'{category}:\n\n'
+              f'Precision: {precision}\n'
+              f'Recall: {recall}\n'
+              f'F1 score: {f1_score}\n',
+              # classification_report(bin_test_y, prediction),
+              '------------------------------------------------------')
+
+    micro_metrics = precision_recall_fscore_support(micro_true, micro_pred,
+                                                    pos_label=0, average='binary')
+    micro_precision, micro_recall, micro_f1_score, _ = micro_metrics
+    macro_precision, macro_recall, macro_f1_score = [x / categories_num
+                                                     for x in macro_metrics]
+
+    print('\nMicro-average: ', (micro_precision, micro_recall, micro_f1_score),
+          '\nMacro-average: ', (macro_precision, macro_recall, macro_f1_score))
 
 
 def main():
