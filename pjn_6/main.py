@@ -5,8 +5,8 @@ from itertools import groupby
 
 from sklearn.svm import SVC
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics import (classification_report,
-                             precision_recall_fscore_support)
+from sklearn.metrics import (precision_recall_fscore_support,
+                             classification_report, confusion_matrix)
 
 import regex as re
 
@@ -102,6 +102,7 @@ def classify(normalized):
               f'Recall: {recall}\n'
               f'F1 score: {f1_score}\n',
               # classification_report(bin_test_y, prediction),
+              # confusion_matrix(bin_test_y, prediction),
               '------------------------------------------------------')
 
     micro_metrics = precision_recall_fscore_support(micro_true, micro_pred,

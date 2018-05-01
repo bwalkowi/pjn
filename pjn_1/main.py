@@ -100,11 +100,21 @@ def worker_fun1(path):
                 for match in RE_1.finditer(judgment['textContent']):
                     val = match.group().replace('\n', '')
                     print(val)
-                    # print(os.path.basename(path), judgment['id'], match.group().replace('\n', ''), sep=';')
+                    # print(os.path.basename(path), judgment['id'],
+                    #       match.group().replace('\n', ''), sep=';')
                     num = normalize(val)
                     if num is not None:
                         values.append(num)
     return values
+
+
+def draw_histogram(values, title):
+    plt.hist(values, bins=np.logspace(0, 16, 100))
+    plt.gca().set_xscale('log')
+    plt.title(title)
+    plt.xlabel('Kwoty [zł]')
+    plt.ylabel('Liczba wystąpień')
+    plt.show()
 
 
 def reduce_fun1(results):
@@ -119,28 +129,9 @@ def reduce_fun1(results):
     l3 = l1+l2
     print(len(l3))
 
-    bins = np.logspace(0, 16, 100)
-
-    plt.hist(l1, bins=bins)
-    plt.gca().set_xscale('log')
-    plt.title('Kwoty poniżej 1 mln')
-    plt.xlabel('Kwoty [zł]')
-    plt.ylabel('Liczba wystąpień')
-    plt.show()
-
-    plt.hist(l2, bins=bins)
-    plt.gca().set_xscale('log')
-    plt.title('Kwoty powyżej 1 mln')
-    plt.xlabel('Kwoty [zł]')
-    plt.ylabel('Liczba wystąpień')
-    plt.show()
-
-    plt.hist(l3, bins=bins)
-    plt.gca().set_xscale('log')
-    plt.title('Wszystkie kwoty')
-    plt.xlabel('Kwoty [zł]')
-    plt.ylabel('Liczba wystąpień')
-    plt.show()
+    draw_histogram(l1, 'Kwoty poniżej 1 mln')
+    draw_histogram(l2, 'Kwoty powyżej 1 mln')
+    draw_histogram(l3, 'Wszystkie kwoty')
 
 
 def worker_fun3(path):

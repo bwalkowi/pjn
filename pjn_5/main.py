@@ -46,14 +46,22 @@ def calc_bigrams_llr(bigram_stats):
 
 def get_bigrams_from_file(file_path):
     words = []
+    prev_line = ''
     with open(file_path) as file:
         for line in file:
             if line.startswith('\t') and 'interp' not in line:
-                word, tag, *_ = line.split()
+                word, tag, _ = line.rsplit(maxsplit=2)
                 category = tag.split(':')[0]
+                if category == 'brev':
+                    word = prev_line.split()[0]
+                else:
+                    word = ' '.join(word.split())
                 words.append((word.lower(), category))
+            prev_line = line
 
-    for fst_word, snd_word in zip(words, words[1:]):
+    following_words = iter(words)
+    next(following_words)
+    for fst_word, snd_word in zip(words, following_words):
         yield (fst_word, snd_word)
 
 
@@ -86,8 +94,6 @@ def main():
     args = parser.parse_args()
 
     bigram_stats = get_bigram_stats(args.dir_path or BIGRAM_STATS_FILE)
-    # pprint(bigram_stats.most_common(30))
-
     bigrams_llr = calc_bigrams_llr(bigram_stats)
 
     def pred(record):

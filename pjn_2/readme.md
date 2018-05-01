@@ -139,4 +139,5 @@ GET judgments/_search
 }
 ```
 
-Histogram w pliku hist.png
+![Histogram w pliku hist.png](./hist.png)
+

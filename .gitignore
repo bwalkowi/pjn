@@ -1,0 +1,6 @@
+*.iml
+__pycache__/
+.idea/
+*.pickle
+*.txt
+.directory

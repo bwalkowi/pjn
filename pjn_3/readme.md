@@ -1,3 +1,7 @@
+## Wykres częstotliwości występowania słów z korpusu
+![Wykres znajduje się w pliku hist.png](./hist.png)
+
+
 ## Korekty przykładowych słów
 ```
 {
