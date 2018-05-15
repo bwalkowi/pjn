@@ -2,6 +2,7 @@ import os
 import pickle
 from pprint import pprint
 import xml.etree.ElementTree
+from itertools import groupby
 from collections import Counter
 
 import matplotlib.pyplot as plt
@@ -18,22 +19,29 @@ def read_xmls():
         with open(os.path.join(INPUT_DIR, file)) as f:
             text_xml = xml.etree.ElementTree.fromstring(f.read())
 
-        for item in text_xml.iter():
-            if item.tag == 'tok':
-                content = ''
-                for child in item.getchildren():
-                    if child.tag == 'orth':
-                        content = child.text
-                    if child.tag == 'ann' and int(child.text) >= 1:
-                        minor_category = child.attrib['chan']
-                        major_category = "_".join(minor_category.split('_')[:2])
+        for sentence in text_xml.iter(tag='sentence'):
+            lexems = []
+            for lexem in sentence.iter(tag='tok'):
+                try:
+                    base = lexem.find('lex/base').text
+                except AttributeError:
+                    base = lexem.find('orth').text
 
-                        minor_categories = categories.get(major_category, {})
-                        minor_category_counter = minor_categories.get(minor_category, Counter())
-                        minor_category_counter.update([content])
+                interpretations = [(int(ann.text), ann.attrib['chan'], base)
+                                   for ann in lexem.iter(tag='ann')
+                                   if ann.text != '0']
+                lexems.extend(interpretations)
+            lexems.sort(key=lambda x: (x[0], x[1]))
+            for (_, minor_cat), entity_lexems in groupby(lexems, key=lambda x: (x[0], x[1])):
+                entity = ' '.join(lexem[2] for lexem in entity_lexems)
+                major_cat = "_".join(minor_cat.split('_')[:2])
 
-                        minor_categories[minor_category] = minor_category_counter
-                        categories[major_category] = minor_categories
+                minor_categories = categories.get(major_cat, {})
+                minor_category_counter = minor_categories.get(minor_cat, Counter())
+                minor_category_counter.update([entity])
+
+                minor_categories[minor_cat] = minor_category_counter
+                categories[major_cat] = minor_categories
 
     with open(PICKLE_FILE, 'wb') as f:
         pickle.dump(categories, f)
@@ -110,9 +118,9 @@ def main():
     else:
         categories = read_xmls()
 
-    # histograms(categories)
-    # histograms(categories, merge_minor=True)
-    # top_100(categories)
+    histograms(categories)
+    histograms(categories, merge_minor=True)
+    top_100(categories)
     top_10(categories)
 
 
