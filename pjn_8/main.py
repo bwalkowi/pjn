@@ -92,6 +92,17 @@ def top_100(categories):
     pprint(top[:100])
 
 
+def top_10(categories):
+    for major_cat, minor_categories in categories.items():
+        top = []
+        for minot_cat, minor_counts in minor_categories.items():
+            top.extend(minor_counts.most_common(10))
+        top.sort(key=lambda x: x[1], reverse=True)
+        print(f'Top 10 for {major_cat}:')
+        pprint(top[:10])
+        print('*' * 25, '\n')
+
+
 def main():
     if os.path.isfile(PICKLE_FILE):
         with open(PICKLE_FILE, 'rb') as f:
@@ -101,7 +112,8 @@ def main():
 
     # histograms(categories)
     # histograms(categories, merge_minor=True)
-    top_100(categories)
+    # top_100(categories)
+    top_10(categories)
 
 
 if __name__ == '__main__':
