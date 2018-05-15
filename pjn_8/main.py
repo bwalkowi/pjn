@@ -1,5 +1,6 @@
 import os
 import pickle
+from pprint import pprint
 import xml.etree.ElementTree
 from collections import Counter
 
@@ -81,6 +82,16 @@ def histograms(categories, merge_minor=False):
     plt.show()
 
 
+def top_100(categories):
+    top = []
+    for minor_categories in categories.values():
+        for minot_cat, minor_counts in minor_categories.items():
+            top.extend([(content, minot_cat, count)
+                        for content, count in minor_counts.most_common(100)])
+    top.sort(key=lambda x: x[2], reverse=True)
+    pprint(top[:100])
+
+
 def main():
     if os.path.isfile(PICKLE_FILE):
         with open(PICKLE_FILE, 'rb') as f:
@@ -88,8 +99,9 @@ def main():
     else:
         categories = read_xmls()
 
-    histograms(categories)
-    histograms(categories, merge_minor=True)
+    # histograms(categories)
+    # histograms(categories, merge_minor=True)
+    top_100(categories)
 
 
 if __name__ == '__main__':
