@@ -1,6 +1,7 @@
 import os
 import json
 import time
+from datetime import datetime
 
 import requests
 import regex as re
@@ -8,9 +9,9 @@ import regex as re
 
 IN_DIR = '../data'
 OUT_DIR = './judgments'
-JUDGMENTS_TO_PROCESS = 2
+JUDGMENTS_TO_PROCESS = 100
 
-USER = ''
+USER = 'pjn@student.agh.edu.pl'
 TASK = 'any2txt|wcrft2|liner2({"model":"n82"})'
 URL = 'http://ws.clarin-pl.eu/nlprest2/base'
 
@@ -54,7 +55,11 @@ def process_files(in_dir, out_dir, to_process=100):
         with open(os.path.join(in_dir, file)) as f:
             judgments = json.load(f)
 
-        for judgment in judgments['items']:
+        for judgment in sorted(judgments['items'],
+                               key=lambda x: datetime.strptime(x['judgmentDate'], "%Y-%m-%d")):
+            if not judgment['judgmentDate'].startswith('2008'):
+                continue
+
             if already_processed == to_process:
                 break
 
