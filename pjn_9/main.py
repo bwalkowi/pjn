@@ -1,6 +1,9 @@
+import os
 from pprint import pprint
 
 from gensim.models import Word2Vec
+from MulticoreTSNE import MulticoreTSNE
+import matplotlib.pyplot as plt
 
 
 MODEL = './model'
@@ -57,7 +60,20 @@ def ex3(wv):
         "niesprawiedliwość",
         "nieszczęście"
     ]
-    pass
+
+    tsne = MulticoreTSNE(n_components=2, n_jobs=os.cpu_count())
+    tsne.fit(wv.vectors)
+
+    vectors_embedded = tsne.fit_transform(wv[(sanitize(phrase)
+                                              for phrase in phrases)])
+
+    fig, ax = plt.subplots()
+    ax.scatter(vectors_embedded[:, 0], vectors_embedded[:, 1])
+
+    for i, phrase in enumerate(phrases):
+        ax.annotate(phrase, (vectors_embedded[:, 0][i], vectors_embedded[:, 1][i]))
+
+    plt.show()
 
 
 def main():

@@ -85,3 +85,5 @@ samochód - droga + rzeka:
 
 
 ## Projekcja wektorów na płaszczyznę:
+
+![Projekcja wektorów na płaszczyznę w pliku hist.png](./fig.png)
